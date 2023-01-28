@@ -49,22 +49,34 @@ public class BasicMovement : MonoBehaviour {
 
     }
 
-    float time = 0;
 
-    // once per fixed time tick - for physics
-    private void FixedUpdate() {
+    static float sqr(float val) {
+        return Mathf.Pow(val, 2);
+    }
 
-        time += Time.fixedDeltaTime * timeRate;
+    private void UpdatePositins(float dt) {
+        // probably something went wrong
+        if (dt < 1e-10) {
+            return;
+        }
 
-        float dt = Time.fixedDeltaTime * timeRate;
         float xn = x + dt * sigma * (y - x);
         float yn = y + dt * (x * (rho - z) - y);
         float zn = z + dt * (x * y - beta * z);
 
+        // check if the step is too big
+        float step = Mathf.Sqrt(sqr(x - xn) + sqr(y - yn) + sqr(z - zn));
+        if (step > 1.0) {
+            // make this step in 2 halves 
+            print("step:" + step + " dt: " + dt);
+            UpdatePositins(dt / 2);
+            UpdatePositins(dt / 2);
+            return;
+        }
+
         x = xn;
         y = yn;
         z = zn;
-
         if (!float.IsFinite(x) || !float.IsFinite(y) || !float.IsFinite(z)) {
             SliderController.OnSliderValueChanged -= HandleSliderValueChange;
             if (goToDestroy != null) {
@@ -75,5 +87,12 @@ public class BasicMovement : MonoBehaviour {
         } else {
             m_rigidbody2D.position = new Vector2(x, y);
         }
+    }
+
+
+    // once per fixed time tick - for physics
+    private void FixedUpdate() {
+        float dt = Time.fixedDeltaTime * timeRate;
+        UpdatePositins(dt);
     }
 }

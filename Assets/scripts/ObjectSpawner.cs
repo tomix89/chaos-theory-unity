@@ -12,15 +12,16 @@ public class ObjectSpawner : MonoBehaviour
 
     private void Start() {
 
-        for (int x = -50; x < 50; x += 5) {
-            for (int y = -50; y < 50; y += 5) {
+      /*  for (int x = -50; x < 50; x += 8) {
+            int y = 0;
+            for (int y = -50; y < 50; y += 8) {
 
                 GameObject go = Instantiate(objectToSpawn, new Vector3(x, y, 1), qt);
                 go.transform.position = new Vector3(x, y, 1);
                 go.GetComponent<BasicMovement>().setGameObj(go);
             }
 
-        }
+        }*/
     }
 
 
