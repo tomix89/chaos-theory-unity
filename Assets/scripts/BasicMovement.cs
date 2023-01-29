@@ -18,9 +18,9 @@ public class BasicMovement : MonoBehaviour {
     float y = 0;
     float z = 1.0f;
 
-    float sigma = 10.0f;
-    float rho = 28.0f;
-    float beta = 8.0f / 3.5f;
+    float sigma = 10.0f; // will be overwritten from sliders 
+    float rho = 28.0f;  // will be overwritten from sliders 
+    float beta = 8.0f / 3.0f;  // will be overwritten from sliders 
 
     float speed = 1; // simualtion speed
     float time = 0; // for debugging it is better to use our own time
@@ -48,12 +48,27 @@ public class BasicMovement : MonoBehaviour {
         SliderController.OnSliderValueChanged += HandleSliderValueChange;
     }
 
-    void HandleSliderValueChange(string name, float value) {
-        if (name == "SliderControl-speed") {
-            speed = value;
-        } else if (name == "SliderControl-trace-dec") {
-            trailTimeLimit_s = value;
+    void HandleSliderValueChange(SliderController.SliderType type, float value) {
+        switch (type) {
+            case SliderController.SliderType.SPEED:
+                speed = value;
+                break;
+            case SliderController.SliderType.TRACE_DECAY:
+                trailTimeLimit_s = value;
+                break;
+            case SliderController.SliderType.PARAM_BETA:
+                beta = value;
+                break;
+            case SliderController.SliderType.PARAM_RHO:
+                rho = value;
+                break;
+            case SliderController.SliderType.PARAM_SIGMA:
+                sigma = value;
+                break;
+            default:
+                throw new System.NotImplementedException();
         }
+ 
     }
 
 
@@ -76,7 +91,7 @@ public class BasicMovement : MonoBehaviour {
         float step = Mathf.Sqrt(sqr(x - xn) + sqr(y - yn) + sqr(z - zn));
         if (step > MAX_STEP) {
             // make this step in 2 halves 
-            print("step:" + step + " dt: " + dt);
+         //   print("step:" + step + " dt: " + dt);
             UpdatePositins(dt / 2);
             UpdatePositins(dt / 2);
             return;
@@ -88,7 +103,7 @@ public class BasicMovement : MonoBehaviour {
 
         // trails needs to be upadted in each iteration
         trailStamps.Add(time); // it does not make much sense to slice the time inside one update
-        trailPoints.Add(new Vector3(x,y,z));
+        trailPoints.Add(new Vector3(x, y, z));
     }
 
     // once per fixed time tick - for physics
