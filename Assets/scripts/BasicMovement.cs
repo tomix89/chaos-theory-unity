@@ -16,7 +16,7 @@ public class BasicMovement : MonoBehaviour {
 
     float x = 0;
     float y = 0;
-    float z = 1.0f;
+    float z = 0;
 
     float sigma = 10.0f; // will be overwritten from sliders 
     float rho = 28.0f;  // will be overwritten from sliders 
@@ -37,13 +37,14 @@ public class BasicMovement : MonoBehaviour {
 
         x = transform.position.x;
         y = transform.position.y;
+        z = transform.position.z;
 
-        Color clr = gameObject.GetComponent<SpriteRenderer>().color;
+        Color clr = gameObject.GetComponent<Renderer>().material.color;
         m_lineRenderer.startColor = clr;
         m_lineRenderer.endColor = clr;
 
         trailStamps.Add(0);
-        trailPoints.Add(new Vector3(x, y, 0));
+        trailPoints.Add(new Vector3(x, y, z));
 
         SliderController.OnSliderValueChanged += HandleSliderValueChange;
     }
@@ -68,7 +69,6 @@ public class BasicMovement : MonoBehaviour {
             default:
                 throw new System.NotImplementedException();
         }
- 
     }
 
 
@@ -111,12 +111,6 @@ public class BasicMovement : MonoBehaviour {
         float dt = Time.fixedDeltaTime * speed;
         time += Time.fixedDeltaTime;
 
-        // delete the timed out trail from oldest
-        while (trailStamps[trailStamps.Count - 1] - trailStamps[0] > trailTimeLimit_s) {
-            trailStamps.RemoveAt(0);
-            trailPoints.RemoveAt(0);
-        }
-
         // claculate the new positions
         UpdatePositins(dt);
 
@@ -129,14 +123,20 @@ public class BasicMovement : MonoBehaviour {
                 Destroy(gameObject);
             }
         } else {
-            transform.position = new Vector2(x, y);
+            transform.position = new Vector3(x, y, z);
+
+            // delete the timed out trail from oldest
+            while (trailStamps[trailStamps.Count - 1] - trailStamps[0] > trailTimeLimit_s) {
+                trailStamps.RemoveAt(0);
+                trailPoints.RemoveAt(0);
+            }
 
             // draw the new trail
             Vector3[] pts = trailPoints.ToArray();
-            print(pts.Length);
+           // print(pts.Length);
             m_lineRenderer.positionCount = pts.Length;
             m_lineRenderer.SetPositions(pts);
-            print(m_lineRenderer.positionCount);
+            // print(m_lineRenderer.positionCount);
         }
     }
 }
