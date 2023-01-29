@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-[RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(LineRenderer))]
 public class BasicMovement : MonoBehaviour {
-    private Rigidbody2D m_rigidbody2D;
     private LineRenderer m_lineRenderer;
 
     // this needs to be in 2 separate lists to be able to assign
@@ -31,19 +29,16 @@ public class BasicMovement : MonoBehaviour {
         this.goToDestroy = goToDestroy;
     }
 
-    float camXmax, camYmax;
-
     // Start is called before the first frame update
     void Start() {
-
-        m_rigidbody2D = GetComponent<Rigidbody2D>();
         m_lineRenderer = GetComponent<LineRenderer>();
 
-        camXmax = Camera.main.orthographicSize * Camera.main.aspect;
-        camYmax = Camera.main.orthographicSize;
+        x = transform.position.x;
+        y = transform.position.y;
 
-        x = m_rigidbody2D.position.x;
-        y = m_rigidbody2D.position.y;
+        Color clr = gameObject.GetComponent<SpriteRenderer>().color;
+        m_lineRenderer.startColor = clr;
+        m_lineRenderer.endColor = clr;
 
         trailStamps.Add(0);
         trailPoints.Add(new Vector3(x,y,0));
@@ -103,9 +98,9 @@ public class BasicMovement : MonoBehaviour {
                 Destroy(gameObject);
             }
         } else {
-            m_rigidbody2D.position = new Vector2(x, y);
+            transform.position = new Vector2(x, y);
             trailStamps.Add(time); // it does not make much sense to slice the time inside one update
-            trailPoints.Add(m_rigidbody2D.position);
+            trailPoints.Add(transform.position);
         }
     }
 
