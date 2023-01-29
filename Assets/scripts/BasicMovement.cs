@@ -12,6 +12,8 @@ public class BasicMovement : MonoBehaviour {
     private List<Vector3> trailPoints = new List<Vector3>();
     private List<float> trailStamps = new List<float>();
 
+    const float MAX_STEP = 0.5f;
+
     float x = 0;
     float y = 0;
     float z = 1.0f;
@@ -41,7 +43,7 @@ public class BasicMovement : MonoBehaviour {
         m_lineRenderer.endColor = clr;
 
         trailStamps.Add(0);
-        trailPoints.Add(new Vector3(x,y,0));
+        trailPoints.Add(new Vector3(x, y, 0));
 
         SliderController.OnSliderValueChanged += HandleSliderValueChange;
     }
@@ -62,16 +64,9 @@ public class BasicMovement : MonoBehaviour {
 
     private void UpdatePositins(float dt) {
         // probably something went wrong
-        if (dt < 1e-10) {
+        if (dt < 1e-12) {
             return;
         }
-
-        // delete the timed out trail from oldest
-        while (trailStamps[trailStamps.Count - 1] - trailStamps[0] > trailTimeLimit_s) {
-            trailStamps.RemoveAt(0);
-            trailPoints.RemoveAt(0);
-        }
-
 
         float xn = x + dt * sigma * (y - x);
         float yn = y + dt * (x * (rho - z) - y);
@@ -79,7 +74,7 @@ public class BasicMovement : MonoBehaviour {
 
         // check if the step is too big
         float step = Mathf.Sqrt(sqr(x - xn) + sqr(y - yn) + sqr(z - zn));
-        if (step > 1.0) {
+        if (step > MAX_STEP) {
             // make this step in 2 halves 
             print("step:" + step + " dt: " + dt);
             UpdatePositins(dt / 2);
@@ -90,6 +85,27 @@ public class BasicMovement : MonoBehaviour {
         x = xn;
         y = yn;
         z = zn;
+
+        // trails needs to be upadted in each iteration
+        trailStamps.Add(time); // it does not make much sense to slice the time inside one update
+        trailPoints.Add(new Vector3(x,y,z));
+    }
+
+    // once per fixed time tick - for physics
+    private void FixedUpdate() {
+        float dt = Time.fixedDeltaTime * speed;
+        time += Time.fixedDeltaTime;
+
+        // delete the timed out trail from oldest
+        while (trailStamps[trailStamps.Count - 1] - trailStamps[0] > trailTimeLimit_s) {
+            trailStamps.RemoveAt(0);
+            trailPoints.RemoveAt(0);
+        }
+
+        // claculate the new positions
+        UpdatePositins(dt);
+
+        // actual position of the circle needs to be updated only once per update 
         if (!float.IsFinite(x) || !float.IsFinite(y) || !float.IsFinite(z)) {
             SliderController.OnSliderValueChanged -= HandleSliderValueChange;
             if (goToDestroy != null) {
@@ -99,21 +115,13 @@ public class BasicMovement : MonoBehaviour {
             }
         } else {
             transform.position = new Vector2(x, y);
-            trailStamps.Add(time); // it does not make much sense to slice the time inside one update
-            trailPoints.Add(transform.position);
+
+            // draw the new trail
+            Vector3[] pts = trailPoints.ToArray();
+            print(pts.Length);
+            m_lineRenderer.positionCount = pts.Length;
+            m_lineRenderer.SetPositions(pts);
+            print(m_lineRenderer.positionCount);
         }
-    }
-
-    // once per fixed time tick - for physics
-    private void FixedUpdate() {
-        float dt = Time.fixedDeltaTime * speed;
-        time += Time.fixedDeltaTime;
-        UpdatePositins(dt);
-
-        Vector3[] pts = trailPoints.ToArray();
-        print(pts.Length);
-        m_lineRenderer.positionCount = pts.Length;
-        m_lineRenderer.SetPositions(pts);
-        print(m_lineRenderer.positionCount);
     }
 }
