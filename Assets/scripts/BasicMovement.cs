@@ -7,17 +7,16 @@ using UnityEngine;
 public class BasicMovement : MonoBehaviour {
     private LineRenderer m_lineRenderer;
 
+    // for center calculation for camera rotator
+    public delegate void PositionUpdateAction(string name, Vector3 value);
+    public static event PositionUpdateAction OnPositionUpdateAction;
+
     // this needs to be in 2 separate lists to be able to assign
     // the points to the line renderer easilly
     private List<Vector3> trailPoints = new List<Vector3>();
     private List<float> trailStamps = new List<float>();
 
     const float MAX_STEP = 0.5f;
-
-  //  public GameObject centerObject;
-    private Vector3 center = new Vector3(2,2,28);
-    private float coeff = 0.9995f;
-
 
     float x = 0;
     float y = 0;
@@ -128,7 +127,12 @@ public class BasicMovement : MonoBehaviour {
                 Destroy(gameObject);
             }
         } else {
-            transform.position = new Vector3(x, y, z);
+            Vector3 newPos = new Vector3(x, y, z);
+            transform.position = newPos;
+
+            if (OnPositionUpdateAction != null) {
+                OnPositionUpdateAction(name, newPos);
+            }
 
             // delete the timed out trail from oldest
             while (trailStamps[trailStamps.Count - 1] - trailStamps[0] > trailTimeLimit_s) {
@@ -138,20 +142,8 @@ public class BasicMovement : MonoBehaviour {
 
             // draw the new trail
             Vector3[] pts = trailPoints.ToArray();
-           // print(pts.Length);
             m_lineRenderer.positionCount = pts.Length;
             m_lineRenderer.SetPositions(pts);
-            // print(m_lineRenderer.positionCount);
-
-
-
-            center.x = coeff * center.x + (1 - coeff) * x;
-            center.y = coeff * center.y + (1 - coeff) * y;
-            center.z = coeff * center.z + (1 - coeff) * z;
-          //  print(name + "  " + center);
-
-          //  centerObject.transform.position = center;
-
         }
     }
 }
