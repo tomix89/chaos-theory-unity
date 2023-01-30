@@ -14,6 +14,11 @@ public class BasicMovement : MonoBehaviour {
 
     const float MAX_STEP = 0.5f;
 
+  //  public GameObject centerObject;
+    private Vector3 center = new Vector3(2,2,28);
+    private float coeff = 0.9995f;
+
+
     float x = 0;
     float y = 0;
     float z = 0;
@@ -137,6 +142,16 @@ public class BasicMovement : MonoBehaviour {
             m_lineRenderer.positionCount = pts.Length;
             m_lineRenderer.SetPositions(pts);
             // print(m_lineRenderer.positionCount);
+
+
+
+            center.x = coeff * center.x + (1 - coeff) * x;
+            center.y = coeff * center.y + (1 - coeff) * y;
+            center.z = coeff * center.z + (1 - coeff) * z;
+          //  print(name + "  " + center);
+
+          //  centerObject.transform.position = center;
+
         }
     }
 }
