@@ -35,7 +35,7 @@ public class CameraRotatorPositioner : MonoBehaviour {
         }
 
         public float getAvg() {
-            print(tag + "  " + min + "  " + max);
+           // print(tag + "  " + min + "  " + max);
             return (max + min) / 2.0f;
         }
     }
@@ -83,7 +83,7 @@ public class CameraRotatorPositioner : MonoBehaviour {
         val.y = Mathf.Clamp(val.y, -maxCamSpeed, maxCamSpeed);
         val.z = Mathf.Clamp(val.z, -maxCamSpeed, maxCamSpeed);
 
-        print("limitedDelta: " + val);
+       // print("limitedDelta: " + val);
 
         return val;
     } 
@@ -94,10 +94,10 @@ public class CameraRotatorPositioner : MonoBehaviour {
 
             limits.applyDecays(decayCoeff);
             Vector3 finalAvg = limits.getAvg();
-            print("final avg: " + finalAvg);
+          //  print("final avg: " + finalAvg);
 
             Vector3 delta = finalAvg - transform.position;
-            print("delta: " + delta);
+          //  print("delta: " + delta);
 
             // this alters all axis, maybe it will be nice to compensate for the camera to rotator distance (z)
             transform.position += limitedDelta(delta); 

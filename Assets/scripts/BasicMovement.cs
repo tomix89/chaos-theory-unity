@@ -35,6 +35,14 @@ public class BasicMovement : MonoBehaviour {
         this.goToDestroy = goToDestroy;
     }
 
+    public enum ChaosType {
+        LORENZ = 0,
+        MODIFYED_LORENZ
+    }
+
+    static ChaosType chaosType = ChaosType.LORENZ;
+
+
     // Start is called before the first frame update
     void Start() {
         m_lineRenderer = GetComponent<LineRenderer>();
@@ -51,6 +59,12 @@ public class BasicMovement : MonoBehaviour {
         trailPoints.Add(new Vector3(x, y, z));
 
         SliderController.OnSliderValueChanged += HandleSliderValueChange;
+        DropdownController.OnDropdownValueChanged += HandleChaosTypeChange;
+    }
+
+    static void HandleChaosTypeChange(int type) {
+        print(type);
+        chaosType = (ChaosType)type;
     }
 
     void HandleSliderValueChange(SliderController.SliderType type, float value) {
@@ -81,18 +95,53 @@ public class BasicMovement : MonoBehaviour {
     }
 
 
+    Vector3 Lorenz(float dt) {
+        Vector3 retVal = new Vector3();
+
+        retVal.x = x + dt * sigma * (y - x);
+        retVal.y = y + dt * (x * (rho - z) - y);
+        retVal.z = z + dt * (x * y - beta * z);
+
+        return retVal;
+    }
+
+    Vector3 ModifyedLorenz(float dt) {
+        Vector3 retVal = new Vector3();
+
+        float a = sigma;
+        float b = beta;
+        float c = rho;
+
+        retVal.x = x + dt * (1.0f / 3.0f * (-(a + 1) * x + a - c + z * y) + ((1 - a) * (sqr(x) - sqr(y)) + (2 * (a + c - z))*x*y) * (1/(3*Mathf.Sqrt(sqr(x) + sqr(y)))));
+        retVal.y = y + dt * (1.0f / 3.0f * ((c-a-z)*x - (a+1)*y) + ((2*(a-1))*x*y + (a+c-z)*(sqr(x)- sqr(y))) * (1 / (3 * Mathf.Sqrt(sqr(x) + sqr(y)))));
+        retVal.z = z + dt * (1.0f/2.0f*(3*sqr(x)*y-Mathf.Pow(y,3)) -b*z);
+
+        return retVal;
+    }
+
     private void UpdatePositins(float dt) {
         // probably something went wrong
         if (dt < 1e-12) {
             return;
         }
 
-        float xn = x + dt * sigma * (y - x);
-        float yn = y + dt * (x * (rho - z) - y);
-        float zn = z + dt * (x * y - beta * z);
+        Vector3 nextStep;
+
+        switch (chaosType) {
+            case ChaosType.LORENZ:
+                nextStep = Lorenz(dt);
+                break;
+            case ChaosType.MODIFYED_LORENZ:
+                nextStep = ModifyedLorenz(dt);
+                break;
+            default:
+                nextStep = Vector3.zero;
+                break;
+        }
+
 
         // check if the step is too big
-        float step = Mathf.Sqrt(sqr(x - xn) + sqr(y - yn) + sqr(z - zn));
+        float step = Mathf.Sqrt(sqr(x - nextStep.x) + sqr(y - nextStep.y) + sqr(z - nextStep.z));
         if (step > MAX_STEP) {
             // make this step in 2 halves 
          //   print("step:" + step + " dt: " + dt);
@@ -101,9 +150,9 @@ public class BasicMovement : MonoBehaviour {
             return;
         }
 
-        x = xn;
-        y = yn;
-        z = zn;
+        x = nextStep.x;
+        y = nextStep.y;
+        z = nextStep.z;
 
         // trails needs to be upadted in each iteration
         trailStamps.Add(time); // it does not make much sense to slice the time inside one update
