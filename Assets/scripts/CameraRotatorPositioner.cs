@@ -4,12 +4,12 @@ using UnityEngine;
 
 public class CameraRotatorPositioner : MonoBehaviour {
 
-    private float decayCoeff = 0.00005f;
+    private float decayCoeff = 0.9999f;
     private float maxCamSpeed = 0.05f;
     bool wasUpdate = false;
 
     private struct MMItem {
-        private string tag;
+        private string tag; // useful for debug
         public float max;
         public float min;
 
@@ -28,10 +28,13 @@ public class CameraRotatorPositioner : MonoBehaviour {
         }
 
         public void applyDecay(float amount) {
-            float oldMin = min;
+            min *= amount;
+            max *= amount;
+        }
 
-            min += max*amount;
-            max += oldMin*amount;
+        public void reset() {
+            min = 0;
+            max = 0;
         }
 
         public float getAvg() {
@@ -57,6 +60,12 @@ public class CameraRotatorPositioner : MonoBehaviour {
             mmz.applyDecay(amount);
         }
 
+        public void reset() {
+            mmx.reset();
+            mmy.reset();
+            mmz.reset();
+        }
+
         public Vector3 getAvg() {
             return new Vector3(mmx.getAvg(), mmy.getAvg(), mmz.getAvg());
         }
@@ -70,9 +79,16 @@ public class CameraRotatorPositioner : MonoBehaviour {
         limits.mmy.setTag("y");
         limits.mmz.setTag("z");
         BasicMovement.OnPositionUpdateAction += HandlePositionUpdateAction;
+        DropdownController.OnDropdownValueChanged += HandleChaosTypeChange;
     }
 
-    void HandlePositionUpdateAction(string name, Vector3 pos) {
+    void HandleChaosTypeChange(int type) {
+        // reset the min/max as different attractors have totally different
+        // limits and it will take ages to converge
+        limits.reset();
+    }
+
+    void HandlePositionUpdateAction(Vector3 pos) {
         wasUpdate = true;
         limits.SetLimits(pos);
     }

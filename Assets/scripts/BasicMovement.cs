@@ -8,7 +8,7 @@ public class BasicMovement : MonoBehaviour {
     private LineRenderer m_lineRenderer;
 
     // for center calculation for camera rotator
-    public delegate void PositionUpdateAction(string name, Vector3 value);
+    public delegate void PositionUpdateAction(Vector3 value);
     public static event PositionUpdateAction OnPositionUpdateAction;
 
     // this needs to be in 2 separate lists to be able to assign
@@ -37,7 +37,7 @@ public class BasicMovement : MonoBehaviour {
 
     public enum ChaosType {
         LORENZ = 0,
-        MODIFYED_LORENZ
+        ROSSLER
     }
 
     static ChaosType chaosType = ChaosType.LORENZ;
@@ -62,9 +62,15 @@ public class BasicMovement : MonoBehaviour {
         DropdownController.OnDropdownValueChanged += HandleChaosTypeChange;
     }
 
-    static void HandleChaosTypeChange(int type) {
-        print(type);
+    void HandleChaosTypeChange(int type) {
+       // print(type);
         chaosType = (ChaosType)type;
+
+        // reinit the positions as on transition 
+        // the values can shoot really high
+        x = Random.Range(2, 0.5f) * (Random.value > 0.5f ? +1 : -1);
+        y = Random.Range(2, 0.5f) * (Random.value > 0.5f ? +1 : -1);
+        z = Random.Range(2, 0.5f) * (Random.value > 0.5f ? +1 : -1);
     }
 
     void HandleSliderValueChange(SliderController.SliderType type, float value) {
@@ -75,13 +81,13 @@ public class BasicMovement : MonoBehaviour {
             case SliderController.SliderType.TRACE_DECAY:
                 trailTimeLimit_s = value;
                 break;
-            case SliderController.SliderType.PARAM_BETA:
+            case SliderController.SliderType.PARAM_BETA_C:
                 beta = value;
                 break;
-            case SliderController.SliderType.PARAM_RHO:
+            case SliderController.SliderType.PARAM_RHO_B:
                 rho = value;
                 break;
-            case SliderController.SliderType.PARAM_SIGMA:
+            case SliderController.SliderType.PARAM_SIGMA_A:
                 sigma = value;
                 break;
             default:
@@ -105,23 +111,44 @@ public class BasicMovement : MonoBehaviour {
         return retVal;
     }
 
-    Vector3 ModifyedLorenz(float dt) {
+
+    // rossler rotates in a different plane than our camera,
+    // so we need to swap axes
+    Vector3 Rossler(float dt) {
         Vector3 retVal = new Vector3();
-
+ 
         float a = sigma;
-        float b = beta;
-        float c = rho;
+        float b = rho;
+        float c = beta;
 
-        retVal.x = x + dt * (1.0f / 3.0f * (-(a + 1) * x + a - c + z * y) + ((1 - a) * (sqr(x) - sqr(y)) + (2 * (a + c - z))*x*y) * (1/(3*Mathf.Sqrt(sqr(x) + sqr(y)))));
-        retVal.y = y + dt * (1.0f / 3.0f * ((c-a-z)*x - (a+1)*y) + ((2*(a-1))*x*y + (a+c-z)*(sqr(x)- sqr(y))) * (1 / (3 * Mathf.Sqrt(sqr(x) + sqr(y)))));
-        retVal.z = z + dt * (1.0f/2.0f*(3*sqr(x)*y-Mathf.Pow(y,3)) -b*z);
+        /*
+        // original
+        retVal.x = x + dt * (-y - z);
+        retVal.y = y + dt * (x + a*y);
+        retVal.z = z + dt * (b + z*(x - c));
+        */
+
+
+        // swapped x and z
+        retVal.z = z + dt * (-y - x);
+        retVal.y = y + dt * (z + a * y);
+        retVal.x = x + dt * (b + x * (z - c));
+
 
         return retVal;
     }
 
+
     private void UpdatePositins(float dt) {
         // probably something went wrong
-        if (dt < 1e-12) {
+        if (dt < 1e-5) {
+            // reset the values to some reasonable values
+            x = Random.Range(-1, 1);
+            y = Random.Range(-1, 1);
+            z = Random.Range(-1, 1);
+
+            trailPoints.Clear();
+            trailStamps.Clear();
             return;
         }
 
@@ -131,8 +158,8 @@ public class BasicMovement : MonoBehaviour {
             case ChaosType.LORENZ:
                 nextStep = Lorenz(dt);
                 break;
-            case ChaosType.MODIFYED_LORENZ:
-                nextStep = ModifyedLorenz(dt);
+            case ChaosType.ROSSLER:
+                nextStep = Rossler(dt);
                 break;
             default:
                 nextStep = Vector3.zero;
@@ -180,7 +207,7 @@ public class BasicMovement : MonoBehaviour {
             transform.position = newPos;
 
             if (OnPositionUpdateAction != null) {
-                OnPositionUpdateAction(name, newPos);
+                OnPositionUpdateAction(newPos);
             }
 
             // delete the timed out trail from oldest
@@ -188,6 +215,7 @@ public class BasicMovement : MonoBehaviour {
                 trailStamps.RemoveAt(0);
                 trailPoints.RemoveAt(0);
             }
+
 
             // draw the new trail
             Vector3[] pts = trailPoints.ToArray();

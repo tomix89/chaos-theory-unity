@@ -1843,7 +1843,7 @@ MonoBehaviour:
     m_Options:
     - m_Text: Lorenz
       m_Image: {fileID: 0}
-    - m_Text: Modifyed Lorenz
+    - m_Text: Rossler
       m_Image: {fileID: 0}
   m_OnValueChanged:
     m_PersistentCalls:
@@ -2618,7 +2618,9 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Move the camera with mouse click and drag + scroll wheel
+  m_Text: 'Move the camera with mouse click and drag.
+
+    Zoom with scroll wheel.'
 --- !u!222 &1128831066
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -4933,7 +4935,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2556635995360691005, guid: 70436a87c6cbf7747acd16af02d57afe, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 15.59
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2556635995360691005, guid: 70436a87c6cbf7747acd16af02d57afe, type: 3}
       propertyPath: m_LocalRotation.w
