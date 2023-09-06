@@ -139,7 +139,7 @@ public class BasicMovement : MonoBehaviour {
     }
 
 
-    private void UpdatePositins(float dt) {
+    private void UpdatePositinos(float dt) {
         // probably something went wrong
         if (dt < 1e-5) {
             // reset the values to some reasonable values
@@ -172,8 +172,8 @@ public class BasicMovement : MonoBehaviour {
         if (step > MAX_STEP) {
             // make this step in 2 halves 
          //   print("step:" + step + " dt: " + dt);
-            UpdatePositins(dt / 2);
-            UpdatePositins(dt / 2);
+            UpdatePositinos(dt / 2);
+            UpdatePositinos(dt / 2);
             return;
         }
 
@@ -192,7 +192,7 @@ public class BasicMovement : MonoBehaviour {
         time += Time.fixedDeltaTime;
 
         // claculate the new positions
-        UpdatePositins(dt);
+        UpdatePositinos(dt);
 
         // actual position of the circle needs to be updated only once per update 
         if (!float.IsFinite(x) || !float.IsFinite(y) || !float.IsFinite(z)) {
